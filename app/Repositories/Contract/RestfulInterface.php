@@ -27,4 +27,6 @@ interface RestfulInterface{
 
   public function getOrder();
 
+  public function lists($column1 = 'name', $column2 = 'id');
+
 }

@@ -17,44 +17,16 @@
 					@endif
 				</div>
 				<div class="form-group">
-					<label for="">Hình Sharing FB (600x315)</label>
-					{!!Form::file('img-sharing')!!}
-					@if($errors->first('img-sharing'))
-						<p class="error">{!!$errors->first('img-sharing')!!}</p>
-					@endif
-				</div>
-
-        <div class="form-group">
-  					<label for="">Hình banner desktop (1170x350)</label>
-  					{!!Form::file('banner_desktop')!!}
-  					@if($errors->first('banner_desktop'))
-  						<p class="error">{!!$errors->first('banner_desktop')!!}</p>
-  					@endif
-				</div>
-
-        <div class="form-group">
-  					<label for="">Hình banner mobile (768x450)</label>
-  					{!!Form::file('banner_mobile')!!}
-  					@if($errors->first('banner_mobile'))
-  						<p class="error">{!!$errors->first('banner_mobile')!!}</p>
-  					@endif
-				</div>
-
-				<div class="form-group">
 					<label for="">Tên tour</label>
 					{!!Form::text('title',old('title'),array('class'=>'form-control'))!!}
 				</div>
-        <div class="form-group">
+                <div class="form-group">
 					<label for="">Code</label>
 					{!!Form::text('tour_code',old('tour_code'),array('class'=>'form-control'))!!}
 				</div>
 				<div class="form-group">
 					<label for="">Thuộc quốc gia</label>
 					{!!Form::select('country_id',$country,'',['class'=>'form-control'])!!}
-				</div>
-				<div class="form-group">
-					<label for="">Khu vực đăng ký</label>
-					{!!Form::select('location_id',$location,'',['class'=>'form-control'])!!}
 				</div>
 				<div class="form-group">
 					<label for="">Mô tả</label>
@@ -64,28 +36,6 @@
 					<label for="">Nội dung</label>
 					{!!Form::textarea('content',old('content'),array('class'=>'form-control ckeditor'))!!}
 				</div>
-
-				<!-- SCHEDULE -->
-				<!-- <div class="form-group">
-					<label for="">Lịch trình</label>
-					<div class="container-fluid">
-						<div class="wrap-schedule">
-							<div class="each-schedule" style="margin-bottom:10px;">
-								<div class="form-group">
-									<input type="text" name="scheduletitle[]" class="form-control" placeholder="Tiêu đề (vd Tuần 1: 15/01 - 20/01/2017)">
-								</div>
-								<div class="form-group">
-									<textarea name="schedulecontent[]"  rows="3" class="form-control" placeholder="Nội dung Lịch trình"></textarea>
-								</div>
-								<div class="form-group">
-									<input type="file" name="scheduleimg[]">
-								</div>
-							</div>
-						</div>
-					</div>
-					<button type="button" class="btn btn-primary" id="addschedule">Thêm Lịch trình</button>
-				</div> -->
-
 				<div class="form-group">
 					<label for="">Đối tác</label>
 					{!!Form::text('partner',old('partner'),array('class'=>'form-control'))!!}
@@ -120,12 +70,38 @@
 					<label for="">Độ tuổi tham gia </label>
 					{!!Form::text('age',old('age'),array('class'=>'form-control'))!!}
 				</div>
-				<div class="form-margin">
+				<div class="form-group">
 					<label for="">Trạng thái</label>
 					<div>
 						<span class="inline-radio"><input type="radio" name="status" value="1" checked=""> <b>Active</b> </span>
 						<span class="inline-radio"><input type="radio" name="status" value="0" > <b>Deactive</b> </span>
 					</div>
+				</div>
+
+                <div class="form-group">
+                    <label for="web_banner">Web Banner</label>
+                    <input type="file" name="web[]"  class="web_banner" multiple>
+                </div>
+
+                <div class="form-group">
+                    <label for="web_banner">Mobile Banner</label>
+                    <input type="file" name="mobile[]"  class="mobile_banner" multiple>
+                </div>
+
+                <div class="form-group">
+					<label for="meta_keyword">Meta Keywords</label>
+					{!!Form::text('meta_keyword',old('meta_keyword'),array('class'=>'form-control'))!!}
+				</div>
+                <div class="form-group">
+					<label for="meta_description">Meta Description</label>
+					{!!Form::text('meta_description',old('meta_description'),array('class'=>'form-control'))!!}
+				</div>
+                <div class="form-group">
+					<label for="">Meta Share Image</label>
+					{!!Form::file('img_share')!!}
+					@if($errors->first('img_share'))
+						<p class="error">{!!$errors->first('img_share')!!}</p>
+					@endif
 				</div>
 
 				<div class="form-group">
@@ -139,16 +115,30 @@
 @stop
 
 @section('script')
+    <link rel="stylesheet" href="{!!asset('public/assets/backend/js/bootstrap-upload/css/fileinput.min.css')!!}" />
+    <script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/plugins/sortable.min.js')!!}"></script>
+    <script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/fileinput.min.js')!!}"></script>
 <script>
 	$(document).ready(function(){
 		$('.date').datepicker({
 			'dateFormat': 'dd-mm-yy'
 		});
 
-		// ADD SCHEDULE
-		// $('#addschedule').on('click',function(){
-		// 	$('.each-schedule:first-child').clone().appendTo('.wrap-schedule');
-		// })
+        $('.web_banner, .mobile_banner').fileinput({
+            uploadUrl: '{!!route('admin.country.create')!!}',
+            uploadAsync: false,
+            dropZoneEnabled:false,
+            showCaption: false,
+            showUpload: false,
+            fileActionSettings:{
+                showDrag: true,
+                showUpload: false,
+            }
+        })
+
+
+
+
 	})
 </script>
 @stop

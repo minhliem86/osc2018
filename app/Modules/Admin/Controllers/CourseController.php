@@ -1,34 +1,62 @@
 <?php namespace App\Modules\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tour;
 use App\Models\Location;
-use App\Models\Country;
+
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Notification;
 use App\Http\Requests\ImageRequest;
 use App\Repositories\CommonRepository;
-
+use App\Repositories\TourRepository;
+use App\Repositories\CountryRepository;
+use Datatables;
 
 class CourseController extends Controller {
 
-		protected $tour;
+	protected $tour;
+	protected $country;
 
-    protected $upload_folder = 'tour';
-    protected $upload_folder2 = 'schedule';
-    protected $tour_upload_func = 'public/upload/tour';
+    protected $upload_folder = 'public/upload/tour';
+    protected $upload_folder2 = 'public/upload/schedule';
 
-    public function __construct(Tour $tour){
+    public function __construct(TourRepository $tour, CountryRepository $country){
         $this->tour = $tour;
+        $this->country = $country;
     }
 
     public function index()
     {
-        $tour = $this->tour->select('id','title','start','end','price','age')
-        ->with(['location'=>function($query){$query->select('title');}])->get();
-        return view('Admin::pages.tour.index')->with(compact('tour'));
+        return view('Admin::pages.course.index');
     }
+
+	public function getData(Request $request)
+	{
+		$course = $this->tour->select(['id', 'title','tour_code', 'price', 'order', 'status']);
+            return Datatables::of($course)
+            ->addColumn('action', function($course){
+                return '<a href="'.route('admin.course.edit', $course->id).'" class="btn btn-info btn-xs inline-block-span"> Edit </a>
+                <form method="POST" action=" '.route('admin.course.destroy', $course->id).' " accept-charset="UTF-8" class="inline-block-span" style="display:inline-block">
+                    <input name="_method" type="hidden" value="DELETE">
+                    <input name="_token" type="hidden" value="'.csrf_token().'">
+                               <button class="btn  btn-danger btn-xs remove-btn" type="button" attrid=" '.route('admin.course.destroy', $course->id).' " onclick="confirm_remove(this);" > Remove </button>
+               </form>' ;
+           })->editColumn('order', function($course){
+               return "<input type='text' name='order' class='form-control' data-id= '".$course->id."' value= '".$course->order."' />";
+           })->editColumn('price', function($course){
+               return "<td>".number_format($course->price)." VND"."</td>";
+           })->editColumn('status', function($course){
+               $status = $course->status ? 'checked' : '';
+               $course_id =$course->id;
+               return '
+                    <input type="checkbox"   name="status" value="1" '.$status.'   data-id ="'.$course_id.'">
+              ';
+           })->filter(function($query) use ($request){
+            if ($request->has('name')) {
+                $query->where('tour_code', 'like', "%{$request->input('name')}%");
+            }
+        })->setRowId('id')->make(true);
+	}
 
     /**
      * Show the form for creating a new resource.
@@ -37,17 +65,11 @@ class CourseController extends Controller {
      */
     public function create()
     {
-        if(!Country::select('id')->first()){
-            Notification::error('Create Country first, Please!');
-            return view('Admin::pages.country.index');
-        }
-        if(!Location::select('id')->first()){
-            Notification::error('Create Location first, Please!');
-            return view('Admin::pages.location.index');
-        }
-        $location = Location::lists('title','id');
-        $country = Country::lists('name','id');
-        return view('Admin::pages.tour.create',compact('location','country'));
+        $country = $this->country->lists('name', 'id');
+		if(count($country) <= 0){
+			return redirect()->route('admin.country.index');
+		}
+        return view('Admin::pages.course.create',compact('country'));
     }
 
     /**
@@ -310,34 +332,78 @@ class CourseController extends Controller {
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id){
-        $this->tour->destroy($id);
-        \Notification::success('Remove Successful');
-        return redirect()->route('admin.course.index');
-    }
+	 public function destroy($id){
+         $this->country->delete($id);
+         \Notification::success('Remove Successful');
+         return redirect()->route('admin.country.index');
+     }
 
-    public function deleteAll(Request $request){
-        if(!$request->ajax()){
-            return view('404');
+     public function deleteAll(Request $request){
+ 		if(!$request->ajax()){
+ 			abort(404);
+ 		}else{
+ 			 $data = $request->arr;
+ 			 $response = $this->country->deleteAll($data);
+ 			 return response()->json(['msg' => 'ok']);
+ 		}
+     }
+
+	public function AjaxRemovePhoto(Request $request){
+		if(!$request->ajax()){
+            abort('404', 'Not Access');
         }else{
-            $data = $request->arr;
-            if($data){
-                $this->tour->destroy($data);
-                return response()->json(array('msg'=>'ok'));
-            }else{
-                return response()->json(array('msg'=>'error'));
-            }
+            $id = $request->input('id_photo');
+            $this->media->delete($id);
+            return response()->json([
+                'mes' => 'Deleted',
+                'error'=> false,
+            ], 200);
         }
     }
 
-    public function checkRelate(Request $request){
-        $tour = $this->tour->find($request->dataid);
-        $count = $tour->image()->get()->count();
-        if($count > 0){
-            return response()->json(['msg'=>'yes']);
+	public function AjaxUpdatePhoto(Request $request){
+		if(!$request->ajax()){
+            abort('404', 'Not Access');
         }else{
-            $tour->delete();
-            return response()->json(['msg'=>'done']);
+            $id = $request->input('id_photo');
+            $order = $request->input('value');
+            $photo = $this->media->update(['order'=>$order], $id);
+
+            return response()->json([
+                'mes' => 'Update Order',
+                'error'=> false,
+            ], 200);
+        }
+    }
+
+	public function postAjaxUpdateOrder(Request $request)
+    {
+        if(!$request->ajax())
+        {
+            abort('404', 'Not Access');
+        }else{
+            $data = $request->input('data');
+            foreach($data as $k => $v){
+                $upt  =  [
+                    'order' => $v,
+                ];
+                $obj = $this->country->find($k);
+                $obj->update($upt);
+            }
+            return response()->json(['msg' =>'ok', 'code'=>200], 200);
+        }
+    }
+
+	public function postAjaxUpdateStatus(Request $request)
+    {
+        if(!$request->ajax())
+        {
+            abort('404', 'Not Access');
+        }else{
+            $value = $request->input('value');
+            $id = $request->input('id');
+            $this->country->update(['status' => $value], $id);
+            return response()->json(['msg' =>'ok', 'code'=>200], 200);
         }
     }
 

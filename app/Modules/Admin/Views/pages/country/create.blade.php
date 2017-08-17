@@ -100,8 +100,6 @@
                     showDrag: true,
                     showUpload: false,
                 }
-
-
             })
         })
     </script>
