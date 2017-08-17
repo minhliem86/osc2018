@@ -4,7 +4,7 @@
  <section class="content-header">
   <h1>
     Country Page
-    <small>Country Page Managment</small>
+    <small>Country</small>
   </h1>
 </section>
 <section class="content">
@@ -20,7 +20,6 @@
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body">
-
                   <table id="table-post" class="table table-bordered table-striped">
                     <thead>
                         <tr>
@@ -32,12 +31,9 @@
                         </tr>
                     </thead>
                   </table>
-                </div>
-            <!-- /.box-body -->
-            </div>
-			</div>	<!-- end ajax-table-->
-
-		</div>
+                </div> <!-- /.box-body -->
+            </div> <!-- end box -->
+		</div>	<!-- end ajax-table-->
 	</div>
 </section>
 @stop
@@ -68,55 +64,78 @@
                {data: 'status', name: 'status', 'orderable': false},
                {data: 'action', name: 'action', 'orderable': false}
            ],
-        //    initComplete: function(){
-        //         var table_api = this.api();
-        //         var data = [];
-        //         var data_order = {};
-        //         $('#btn-count').click( function () {
-        //             var rows = table_api.rows('.selected').data();
-        //             rows.each(function(index, e){
-        //                 data.push(index.country_id);
-        //             })
-        //             alertify.confirm('You can not undo this action. Are you sure ?', function(e){
-        //                 if(e){
-        //                     $.ajax({
-        //                         'url':"{!!route('admin.country.deleteAll')!!}",
-        //                         'data' : {arr: data,_token:$('meta[name="csrf-token"]').attr('content')},
-        //                         'type': "POST",
-        //                         'success':function(result){
-        //                             if(result.msg = 'ok'){
-        //                                 table.rows('.selected').remove();
-        //                                 table.draw();
-        //                                 alertify.success('The data is removed!');
-        //                                 location.reload();
-        //                             }
-        //                         }
-        //                     });
-        //                 }
-        //             })
-        //         })
-           //
-        //         $('#btn-updateOrder').click(function(){
-        //             var rows_order = table_api.rows().data();
-        //             var data_order = {};
-        //             $('input[name="order"]').each(function(index){
-        //                 var id = $(this).data('id');
-        //                 var va = $(this).val();
-        //                 data_order[id] = va;
-        //             });
-        //             $.ajax({
-        //                 url: '{{route("admin.country.postAjaxUpdateOrder")}}',
-        //                 type:'POST',
-        //                 data: {data: data_order,  _token:$('meta[name="csrf-token"]').attr('content') },
-        //                 success: function(rs){
-        //                     if(rs.code == 200){
-        //                         location.reload(true);
-        //                         // console.log(rs.msg);
-        //                     }
-        //                 }
-        //             })
-        //         })
-        //    }
+           initComplete: function(){
+                var table_api = this.api();
+                var data = [];
+                var data_order = {};
+                $('#btn-count').click( function () {
+                    var rows = table_api.rows('.selected').data();
+                    rows.each(function(index, e){
+                        data.push(index.id);
+                    })
+                    alertify.confirm('You can not undo this action. Are you sure ?', function(e){
+                        if(e){
+                            $.ajax({
+                                'url':"{!!route('admin.country.deleteAll')!!}",
+                                'data' : {arr: data,_token:$('meta[name="csrf-token"]').attr('content')},
+                                'type': "POST",
+                                'success':function(result){
+                                    if(result.msg = 'ok'){
+                                        table.rows('.selected').remove();
+                                        table.draw();
+                                        alertify.success('The data is removed!');
+                                        location.reload();
+                                    }
+                                }
+                            });
+                        }
+                    })
+                })
+
+                $('#btn-updateOrder').click(function(){
+                    var rows_order = table_api.rows().data();
+                    var data_order = {};
+                    $('input[name="order"]').each(function(index){
+                        var id = $(this).data('id');
+                        var va = $(this).val();
+                        data_order[id] = va;
+                    });
+                    $.ajax({
+                        url: '{{route("admin.country.postAjaxUpdateOrder")}}',
+                        type:'POST',
+                        data: {data: data_order,  _token:$('meta[name="csrf-token"]').attr('content') },
+                        success: function(rs){
+                            if(rs.code == 200){
+                                location.reload(true);
+                                // console.log(rs.msg);
+                            }
+                        }
+                    })
+                })
+
+                $('input[name="status"]').on('change', function(){
+                    var rows_order = table_api.rows().data();
+                    var value;
+                    if($(this).is(':checked')){
+                        value = 1;
+                    }else{
+                        value = 0;
+                    }
+                    var id = $(this).data('id');
+                    $.ajax({
+                        url: '{{route("admin.country.postAjaxUpdateStatus")}}',
+                        type:'POST',
+                        data: {value: value, id: id ,  _token:$('meta[name="csrf-token"]').attr('content') },
+                        success: function(rs){
+                            if(rs.code == 200){
+                                // location.reload(true);
+                                alertify.success('The data is updated.');
+
+                            }
+                        }
+                    })
+                })
+           }
         });
         /*SELECT ROW*/
         $('#table-post tbody').on('click','tr',function(){

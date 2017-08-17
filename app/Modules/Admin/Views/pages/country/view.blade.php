@@ -29,6 +29,10 @@
                     {!!Form::textarea('description',old('description'),array('class'=>'form-control'))!!}
                 </div>
                 <div class="form-group">
+                    <label for="">Sắp xếp</label>
+                    {!!Form::text('order',old('order'),array('class'=>'form-control'))!!}
+                </div>
+                <div class="form-group">
                     <label for="">Kết hợp nhiều quốc gia</label>
                     <div>
                         <span class="inline-radio"><input type="radio" name="multi_countries" value="1" {!!$country->multi_countries == 1 ? 'checked' : ''!!}> <b>Có</b> </span>
@@ -52,17 +56,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="col-md-2 control-label">Web banner </label>
-                    <div class="col-md-10">
                       <div class="container-fluid">
                         @if($country->medias->count())
-                          @foreach($country->medias()->get()->chunk(4) as $chunk )
+                          @foreach($country->medias()->where('type',1)->get()->chunk(4) as $chunk )
                           <div class="row">
                             @foreach($chunk as $media)
                             <div class="col-md-3">
                               <div class="file-preview-frame krajee-default  file-preview-initial file-sortable kv-preview-thumb" data-template="image">
                                 <div class="kv-file-content">
-                                  <img src="{{asset('public/upload')}}/{{$media->img_url}}" class="file-preview-image kv-preview-data img-responsive" title="" alt="" style="width:auto;height:120px;">
+                                  <img src="{{asset('public/upload')}}/{{$media->img_url}}" class="file-preview-image kv-preview-data img-responsive" title="" alt="" style="width:auto;height:120px; display:block; margin:0 auto;">
                                 </div>
                                 <div class="photo-order-input" style="margin-bottom:10px">
                                   <input type="text" class="form-control text-center" name="photo_order" value="{{$media->order}}">
@@ -78,8 +80,6 @@
                           @endforeach
                         @endif
                       </div>
-                      <input type="file" name="thumb-input[]" id="thumb-input" multiple >
-                    </div>
                 </div>
 
                 <div class="form-group">
@@ -87,6 +87,32 @@
                     <input type="file" name="web[]"  class="web_banner" multiple>
                 </div>
 
+                <div class="form-group">
+                      <div class="container-fluid">
+                        @if($country->medias->count())
+                          @foreach($country->medias()->where('type',2)->get()->chunk(4) as $chunk )
+                          <div class="row">
+                            @foreach($chunk as $media)
+                            <div class="col-md-3">
+                              <div class="file-preview-frame krajee-default  file-preview-initial file-sortable kv-preview-thumb" data-template="image">
+                                <div class="kv-file-content">
+                                  <img src="{{asset('public/upload')}}/{{$media->img_url}}" class="file-preview-image kv-preview-data img-responsive"  title="" alt="" style="width:auto;height:120px; display:block; margin:0 auto;">
+                                </div>
+                                <div class="photo-order-input" style="margin-bottom:10px">
+                                  <input type="text" class="form-control text-center" name="photo_order" value="{{$media->order}}">
+                                </div>
+                                <div class="file-footer-buttons">
+                                    <button type="button" class="kv-file-remove btn btn-xs btn-default" title="Cập nhật vị trí" onclick="updatePhoto(this,{{$media->id}})"><i class="glyphicon glyphicon-refresh text-warning"></i></button>
+                                   <button type="button" class="kv-file-remove btn btn-xs btn-default" title="Remove file" onclick="removePhoto(this,{{$media->id}})"><i class="glyphicon glyphicon-trash text-danger"></i></button>
+                                </div>
+                              </div>
+                            </div>
+                            @endforeach
+                          </div>
+                          @endforeach
+                        @endif
+                      </div>
+                </div>
                 <div class="form-group">
                     <label for="web_banner">Mobile Banner</label>
                     <input type="file" name="mobile[]"  class="mobile_banner" multiple>
@@ -104,7 +130,7 @@
                     <label for="">Meta Share Image</label>
                     <p>
 						<img src="{!!asset('public/upload')!!}/{!!$country->meta_share!!}" width="150" alt="">
-						{!!Form::hidden('img-bk-share',$country->meta_share)!!}
+						{!!Form::hidden('img-share-bk',$country->meta_share)!!}
 					</p>
                     {!!Form::file('img_share')!!}
                     @if($errors->first('img_share'))
@@ -117,9 +143,6 @@
                     <a href="{!!URL::previous()!!}" class="btn btn-primary">Back</a>
                 </div>
 
-				<div class="form-group">
-					{!!Form::submit('Save',array('class'=>'btn btn-primary'))!!}
-				</div>
 			{!!Form::close()!!}
 		</div>
 	</div>
@@ -127,9 +150,13 @@
 @stop
 
 @section('script')
+<link rel="stylesheet" href="{!!asset('public/assets/backend/js/bootstrap-upload/css/fileinput.min.css')!!}" />
+<script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/plugins/sortable.min.js')!!}"></script>
+<script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/fileinput.min.js')!!}"></script>
+
 <script>
 $(document).ready(function(){
-    $("#thumb-input").fileinput({
+    $(".web_banner").fileinput({
       uploadUrl: "{{route('admin.country.update',$country->id)}}", // server upload action
       uploadAsync: true,
       showUpload: false,
@@ -139,33 +166,42 @@ $(document).ready(function(){
           showUpload : false,
         }
     })
-  })
-
-  function removePhoto(e, id){
-    $.ajax({
-      url: '{{route("admin.country.AjaxRemovePhoto")}}',
-      type: 'POST',
-      data:{id_photo: id, _token:$('meta[name="csrf-token"]').attr('content')},
-      success:function(data){
-        if(!data.error){
-          e.parentNode.parentNode.parentNode.remove();
+    /*MOBILE BANNER*/
+    $(".mobile_banner").fileinput({
+      uploadUrl: "{{route('admin.country.update',$country->id)}}", // server upload action
+      uploadAsync: true,
+      showUpload: false,
+      showCaption: false,
+       dropZoneEnabled : false,
+        fileActionSettings:{
+          showUpload : false,
         }
-      }
     })
-  }
-  function updatePhoto(e, id){
-    var value = e.parentNode.previousElementSibling.childNodes[1].value;
-    $.ajax({
-      url: '{{route("admin.country.AjaxUpdatePhoto")}}',
-      type: 'POST',
-      data:{id_photo: id, value: value, _token:$('meta[name="csrf-token"]').attr('content')},
-      success:function(data){
-        if(!data.error){
-          alertify.success('Cập nhật thay đổi.');
-        }
-      }
-    })
-  }
 })
+function removePhoto(e, id){
+    $.ajax({
+        url: '{{route("admin.country.AjaxRemovePhoto")}}',
+        type: 'POST',
+        data:{id_photo: id, _token:$('meta[name="csrf-token"]').attr('content')},
+        success:function(data){
+            if(!data.error){
+              e.parentNode.parentNode.parentNode.remove();
+            }
+        }
+    })
+}
+function updatePhoto(e, id){
+    var value = e.parentNode.previousElementSibling.childNodes[1].value;
+        $.ajax({
+        url: '{{route("admin.country.AjaxUpdatePhoto")}}',
+        type: 'POST',
+        data:{id_photo: id, value: value, _token:$('meta[name="csrf-token"]').attr('content')},
+        success:function(data){
+            if(!data.error){
+              alertify.success('Cập nhật thay đổi.');
+            }
+        }
+    })
+}
 </script>
 @stop

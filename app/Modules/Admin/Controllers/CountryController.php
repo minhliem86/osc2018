@@ -19,9 +19,10 @@ class CountryController extends Controller {
 	protected $media;
 	protected $common;
 
-    protected $upload_folder = 'country';
-    protected $upload_web_banner = 'country/web';
-    protected $upload_mobile_banner = 'country/mobile';
+    protected $upload_folder = 'public/upload/country';
+    protected $upload_meta = 'public/upload/country/meta';
+    protected $upload_web_banner = 'public/upload/country/web';
+    protected $upload_mobile_banner = 'public/upload/country/mobile';
 
 	public function __construct(CountryRepository $country, CommonRepository $common, MediaRepository $media){
 		$this->country = $country;
@@ -82,13 +83,13 @@ class CountryController extends Controller {
         $order = $this->country->getOrder();
 		if($imgrequest->hasFile('img')){
 			$img_url = $this->common->uploadImage($request, $request->file('img'), $this->upload_folder, false);
-			$img_url = $this->common->getPath($img_url, asset(''));
+			$img_url = $this->common->getPath($img_url, asset('public/upload/'));
 		}else{
 			$img_url = "";
 		}
 		if($imgrequest->hasFile('img_share')){
-			$img_share = $this->common->uploadImage($request, $request->file('img_share'), $this->upload_folder, false);
-			$img_share = $this->common->getPath($img_share, asset(''));
+			$img_share = $this->common->uploadImage($request, $request->file('img_share'), $this->upload_meta, false);
+			$img_share = $this->common->getPath($img_share,  asset('public/upload/'));
 		}else{
 			$img_share = "";
 		}
@@ -100,9 +101,9 @@ class CountryController extends Controller {
             'home_show' => $request->home_show,
             'status'=> $request->status,
             'img_avatar'=> $img_url,
-			'meta_keyword' => $request->meta_keyword,
+			'meta_keywords' => $request->meta_keyword,
 			'meta_description' => $request->meta_description,
-			'meta_share' => $request->$img_share,
+			'meta_share' => $img_share,
             'order'=>$order
         ];
         $country = $this->country->create($data);
@@ -110,11 +111,11 @@ class CountryController extends Controller {
 		if($imgrequest->hasFile('web')){
 			foreach($request->file('web') as $k=>$thumb){
 			  $img_web = $this->common->uploadImage($request, $thumb, $this->upload_web_banner,$resize = false);
-			  $img_web = $this->common->getPath($img_web, asset(''));
+			  $img_web = $this->common->getPath($img_web, asset('public/upload/'));
 
 			  $order = $this->media->getOrder();
 			  $country->medias()->save(new \App\Models\Media([
-				'img_url' => $this->common->getPath($img_web, asset('public/upload')),
+				'img_url' => $img_web,
 				'order'=>$order,
 				'type' => 1
 			  ]));
@@ -123,11 +124,11 @@ class CountryController extends Controller {
 		if($imgrequest->hasFile('mobile')){
 			foreach($request->file('mobile') as $k=>$thumb){
 			  $img_mobile = $this->common->uploadImage($request, $thumb, $this->upload_mobile_banner,$resize = false);
-			  $img_mobile = $this->common->getPath($img_mobile, asset(''));
+			  $img_mobile = $this->common->getPath($img_mobile, asset('public/upload/'));
 
 			  $order = $this->media->getOrder();
 			  $country->medias()->save(new \App\Models\Media([
-				'img_url' => $this->common->getPath($img_mobile, asset('public/upload')),
+				'img_url' => $img_mobile,
 				'order'=>$order,
 				'type' => 2
 			  ]));
@@ -170,93 +171,60 @@ class CountryController extends Controller {
      */
     public function update(Request $request,ImageRequest $imgrequest, $id)
     {
-        if($imgrequest->hasFile('img')){
-            $file = $imgrequest->file('img');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
+		if($imgrequest->hasFile('img')){
+			$img_url = $this->common->uploadImage($request, $request->file('img'), $this->upload_folder, false);
+			$img_url = $this->common->getPath($img_url, asset('public/upload'));
+		}else{
+			$img_url = $request->input('img-bk');
+		}
+		if($imgrequest->hasFile('img_share')){
+			$img_share = $this->common->uploadImage($request, $request->file('img_share'), $this->upload_meta, false);
+			$img_share = $this->common->getPath($img_share,  asset('public/upload'));
+		}else{
+			$img_share =  $request->input('img-share-bk');
+		}
 
-            $file->move($destinationPath,$filename);
+		$data = [
+            'name'=>$request->name,
+            'slug' => \Unicode::make($request->name),
+            'description' => $request->description,
+            'multi_countries' => $request->multi_countries,
+            'home_show' => $request->home_show,
+            'status'=> $request->status,
+            'img_avatar'=> $img_url,
+			'meta_keywords' => $request->meta_keyword,
+			'meta_description' => $request->meta_description,
+			'meta_share' => $img_share,
+            'order'=>$request->order,
+        ];
+		$country = $this->country->update($data, $id);
 
-            // $size = getimagesize($file);
-            // if($size[0] > 620){
-            //     \Image::make($file->getRealPath())->resize(620,null,function($constraint){$constraint->aspectRatio();})->save($destinationPath.'/'.$filename);
-            // }else{
-            //     $file->move($destinationPath,$filename);
-            // }
+		if($imgrequest->hasFile('web')){
+			foreach($request->file('web') as $k=>$thumb){
+			  $img_web = $this->common->uploadImage($request, $thumb, $this->upload_web_banner,$resize = false);
+			  $img_web = $this->common->getPath($img_web, asset('public/upload'));
 
-            $img_url = asset('public/upload').'/'.$this->upload_folder.'/'.$filename;
-        }else{
-            $img_url = $request->input('img-bk');
-        }
+			  $order = $this->media->getOrder();
+			  $country->medias()->save(new \App\Models\Media([
+				'img_url' => $img_web,
+				'order'=>$order,
+				'type' => 1
+			  ]));
+			}
+		}
+		if($imgrequest->hasFile('mobile')){
+			foreach($request->file('mobile') as $k=>$thumb){
+			  $img_mobile = $this->common->uploadImage($request, $thumb, $this->upload_mobile_banner,$resize = false);
+			  $img_mobile = $this->common->getPath($img_mobile, asset('public/upload'));
 
-        if($imgrequest->hasFile('imgslide')){
-            $file = $imgrequest->file('imgslide');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder.'/'.$this->upload_sub_folder;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
-
-            // $file->move($destinationPath,$filename);
-             $filename_resize = $destinationPath.'/'.$filename;
-            $size = getimagesize($file);
-            // dd($size);
-            \Image::make($file->getRealPath())->resize(660,325)->save($filename_resize);
-            // if($size[0] > 660){
-
-            // }else{
-            //     $file->move($destinationPath,$filename);
-            // }
-
-            $imgslide_url = asset('public/upload').'/'.$this->upload_folder.'/'.$this->upload_sub_folder.'/'.$filename;
-        }else{
-            $imgslide_url = $request->input('imgslide-bk');
-        }
-
-        $country = $this->country->find($id);
-        $country->name = $request->name;
-        $country->slug = \Unicode::make($request->name);
-        $country->description = $request->description;
-        $country->multi_countries = $request->multi_countries;
-        $country->home_show = $request->home_show;
-        $country->img_avatar = $img_url;
-        $country->img_slide = $imgslide_url;
-        $country->status = $request->status;
-        $country->order = $request->order;
-        $country->save();
-
-        if($imgrequest->hasFile('img-banner')){
-            $file = $imgrequest->file('img-banner');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder.'/'.$this->upload_folder_banner;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
-
-            $filename_resize = $destinationPath.'/'.$filename;
-             \Image::make($file->getRealPath())->resize(1170,350)->save($filename_resize);
-            $imgbanner_url = asset('public/upload').'/'.$this->upload_folder.'/'.$this->upload_folder_banner.'/'.$filename;
-
-            $order_img = ImgModel::orderBy('order','DESC')->first();
-            count($order_img) == 0 ?  $current = 1 :  $current = $order_img->order +1 ;
-
-            $image = new ImgModel(['img_url'=>$imgbanner_url,'status'=>1,'order'=>$current,'type'=>'banner_country']);
-            $country->images()->save($image);
-        }
-
-        if($imgrequest->hasFile('img-banner-mobile')){
-            $file = $imgrequest->file('img-banner-mobile');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder.'/'.$this->upload_folder_banner;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
-
-            $filename_resize = $destinationPath.'/'.$filename;
-             \Image::make($file->getRealPath())->resize(800,600)->save($filename_resize);
-            $imgbanner_url_mobile = asset('public/upload').'/'.$this->upload_folder.'/'.$this->upload_folder_banner.'/'.$filename;
-
-            $order_img = ImgModel::orderBy('order','DESC')->first();
-            count($order_img) == 0 ?  $current = 1 :  $current = $order_img->order +1 ;
-
-            $image = new ImgModel(['img_url'=>$imgbanner_url_mobile,'status'=>1,'order'=>$current,'type'=>'banner_country_mobile']);
-            $country->images()->save($image);
-        }
+			  $order = $this->media->getOrder();
+			  $country->medias()->save(new \App\Models\Media([
+				'img_url' => $img_mobile,
+				'order'=>$order,
+				'type' => 2
+			  ]));
+			}
+		}
 
         Notification::success('Updated');
         return  redirect()->route('admin.country.index');
@@ -269,7 +237,7 @@ class CountryController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function destroy($id){
-        $this->country->destroy($id);
+        $this->country->delete($id);
         \Notification::success('Remove Successful');
         return redirect()->route('admin.country.index');
     }
@@ -281,7 +249,7 @@ class CountryController extends Controller {
 			 $data = $request->arr;
 			 $response = $this->country->deleteAll($data);
 			 return response()->json(['msg' => 'ok']);
-	   }
+		}
     }
 
     public function AjaxRemovePhoto(Request $request){
@@ -326,6 +294,19 @@ class CountryController extends Controller {
                 $obj = $this->country->find($k);
                 $obj->update($upt);
             }
+            return response()->json(['msg' =>'ok', 'code'=>200], 200);
+        }
+    }
+
+	public function postAjaxUpdateStatus(Request $request)
+    {
+        if(!$request->ajax())
+        {
+            abort('404', 'Not Access');
+        }else{
+            $value = $request->input('value');
+            $id = $request->input('id');
+            $this->country->update(['status' => $value], $id);
             return response()->json(['msg' =>'ok', 'code'=>200], 200);
         }
     }

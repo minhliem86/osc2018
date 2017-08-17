@@ -55,6 +55,7 @@ Route::group(['prefix'=>'admin','namespace'=>'App\Modules\Admin\Controllers'],fu
 			Route::post('country/postAjaxUpdateOrder',['as'=>'admin.country.postAjaxUpdateOrder','uses'=>'CountryController@postAjaxUpdateOrder']);
 			Route::post('country/AjaxRemovePhoto',['as'=>'admin.country.AjaxRemovePhoto','uses'=>'CountryController@AjaxRemovePhoto']);
 			Route::post('country/AjaxUpdatePhoto',['as'=>'admin.country.AjaxUpdatePhoto','uses'=>'CountryController@AjaxUpdatePhoto']);
+			Route::post('country/postAjaxUpdateStatus',['as'=>'admin.country.postAjaxUpdateStatus','uses'=>'CountryController@postAjaxUpdateStatus']);
 			Route::resource('country','CountryController');
 
 			/*LOCATION*/
@@ -71,10 +72,13 @@ Route::group(['prefix'=>'admin','namespace'=>'App\Modules\Admin\Controllers'],fu
 
 
 			/*Tour*/
-			Route::post('/course/deleteall',['as'=>'admin.course.deleteall','uses'=>'CourseController@deleteAll']);
-			// Route::post('tour/addSchedule',['as'=>'admin.tour.addSchedule','uses'=>'TourController@addSchedule']);
-			// Route::post('tour/ajaxDeleteSchedule',['as'=>'admin.tour.ajaxDeleteShedule','uses'=>'TourController@ajaxDeleteSchedule']);
-			Route::resource('/course','CourseController');
+			Route::post('course/deleteAll',['as'=>'admin.course.deleteAll','uses'=>'CourseController@deleteAll']);
+			Route::any('course/getData',['as'=>'admin.course.getData','uses'=>'CourseController@getData']);
+			Route::post('course/postAjaxUpdateOrder',['as'=>'admin.course.postAjaxUpdateOrder','uses'=>'CourseController@postAjaxUpdateOrder']);
+			Route::post('course/AjaxRemovePhoto',['as'=>'admin.course.AjaxRemovePhoto','uses'=>'CourseController@AjaxRemovePhoto']);
+			Route::post('course/AjaxUpdatePhoto',['as'=>'admin.course.AjaxUpdatePhoto','uses'=>'CourseController@AjaxUpdatePhoto']);
+			Route::post('course/postAjaxUpdateStatus',['as'=>'admin.course.postAjaxUpdateStatus','uses'=>'CourseController@postAjaxUpdateStatus']);
+			Route::resource('course','CourseController');
 
 			// MANAGE USER
 			Route::get('/create-user',['as'=>'admin.getCreateUser', 'uses'=>'AdminController@getCreateUser']);

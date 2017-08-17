@@ -6,7 +6,7 @@ class Media extends Model {
 
 	public $table = 'medias';
 
-    protected $fillable = ['type', 'img_url'];
+    protected $fillable = ['type', 'img_url','order'];
 
     public function mediable()
     {
