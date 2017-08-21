@@ -23,6 +23,9 @@ class CreateTablePromotions extends Migration {
 			$table->string('img_icon')->nullable();
 			$table->boolean('status')->default('1');
 			$table->integer('order')->nullable();
+			$table->string('meta_keywords')->nullable();
+			$table->text('meta_description')->nullable();
+			$table->string('meta_share')->nullable();
 			$table->timestamps();
 		});
 	}

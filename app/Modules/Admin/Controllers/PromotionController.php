@@ -1,27 +1,57 @@
 <?php namespace App\Modules\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Promotion;
+
 use Illuminate\Http\Request;
 use Notification;
 use App\Http\Requests\ImageRequest;
+use App\Repositories\PromotionRepository;
+use App\Repositories\Eloquent\CommonRepository;
+use Databases;
 
 
 class PromotionController extends Controller {
 
-	protected $promotion;
+		protected $promotion;
+		protected $common;
 
-    protected $upload_folder = 'promotion';
+    protected $upload_folder = 'public/upload/promotion';
 
-	public function __construct(Promotion $promotion){
-		$this->promotion = $promotion;
-	}
-	
-	public function index()
+		public function __construct(PromotionRepository $promotion, CommonRepository $common){
+			$this->promotion = $promotion;
+			$this->common = $common;
+		}
+
+		public function index()
     {
-        $promotion = $this->promotion->select('id','name','img_avatar')->get();
-        return view('Admin::pages.promotion.index')->with(compact('promotion'));
+        return view('Admin::pages.promotion.index');
     }
+
+		public function getData(Request $request)
+		{
+			$promotion = $this->promotion->select(['id', 'name','order', 'status']);
+			return Datatables::of($promotion)
+			->addColumn('action', function($promotion){
+					return '<a href="'.route('admin.promotion.edit', $promotion->id).'" class="btn btn-info btn-xs inline-block-span"> Edit </a>
+					<form method="POST" action=" '.route('admin.promotion.destroy', $promotion->id).' " accept-charset="UTF-8" class="inline-block-span" style="display:inline-block">
+							<input name="_method" type="hidden" value="DELETE">
+							<input name="_token" type="hidden" value="'.csrf_token().'">
+												 <button class="btn  btn-danger btn-xs remove-btn" type="button" attrid=" '.route('admin.promotion.destroy', $promotion->id).' " onclick="confirm_remove(this);" > Remove </button>
+				 </form>' ;
+		 })->editColumn('order', function($promotion){
+				 return "<input type='text' name='order' class='form-control' data-id= '".$promotion->id."' value= '".$promotion->order."' />";
+		 })->editColumn('status', function($promotion){
+				 $status = $promotion->status ? 'checked' : '';
+				 $promotion_id =$promotion->id;
+				 return '
+							<input type="checkbox"   name="status" value="1" '.$status.'   data-id ="'.$promotion_id.'">
+				';
+		 })->filter(function($query) use ($request){
+				if ($request->has('name')) {
+						$query->where('name', 'like', "%{$request->input('name')}%");
+				}
+			})->setRowId('id')->make(true);
+		}
 
     /**
      * Show the form for creating a new resource.
@@ -41,66 +71,32 @@ class PromotionController extends Controller {
      */
     public function store(Request $request,ImageRequest $imgrequest, Promotion $promotion)
     {
-        $order = $this->promotion->orderBy('order','DESC')->first();
-        count($order) == 0 ?  $current = 1 :  $current = $order->order +1 ;
+				$order = $this->promotion->getOrder();
 
-        if($imgrequest->hasFile('img')){
-            $file = $imgrequest->file('img');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
+				if($imgrequest->hasFile('img_avatar')){
+					$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
+					$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
+				}else{
+					$img_avatar ="";
+				}
 
-            // $file->move($destinationPath,$filename);
-            $filename_resize = $destinationPath.'/'.$filename;
-            $size = getimagesize($file);
-            \Image::make($file->getRealPath())->resize(200,200)->save($filename_resize);
-            // if($size[0] > 620){
-            //     \Image::make($file->getRealPath())->resize(620,null,function($constraint){$constraint->aspectRatio();})->save($destinationPath.'/'.$filename);
-            // }else{
-            //     $file->move($destinationPath,$filename);
-            // }
-
-            $img_url = asset('public/upload').'/'.$this->upload_folder.'/'.$filename;
-            // $img_alt = \GetNameImage::make('\/',$filename);
-        }else{
-            $img_url = asset('public/assets/frontend/images/default-img/img-promotion.jpg');
-            // $img_alt = \GetNameImage::make('\/',$img_url);
-        }
-
-        if($imgrequest->hasFile('img-slide')){
-            $file = $imgrequest->file('img-slide');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
-
-            // $file->move($destinationPath,$filename);
-            $filename_resize = $destinationPath.'/'.$filename;
-            $size = getimagesize($file);
-            \Image::make($file->getRealPath())->resize(560,230)->save($filename_resize);
-            // if($size[0] > 620){
-            //     \Image::make($file->getRealPath())->resize(620,null,function($constraint){$constraint->aspectRatio();})->save($destinationPath.'/'.$filename);
-            // }else{
-            //     $file->move($destinationPath,$filename);
-            // }
-
-            $img_url2 = asset('public/upload').'/'.$this->upload_folder.'/'.$filename;
-            // $img_alt = \GetNameImage::make('\/',$filename);
-        }else{
-            $img_url2 = asset('public/assets/frontend/images/default-img/img-promotion.jpg');
-            // $img_alt = \GetNameImage::make('\/',$img_url);
-        }
-
+				if($imgrequest->hasFile('img_icon')){
+					$img_icon = $this->common->uploadImage($request, $request->file('img_icon'), $this->upload_folder, false);
+					$img_icon = $this->common->getPath($img_icon, asset('public/upload/'));
+				}else{
+					$img_icon ="";
+				}
 
         $data = [
             'name'=>$request->name,
             'slug' => \Unicode::make($request->name),
-            'img_icon' => $img_url,
-            'img_avatar' => $img_url2,
+            'img_icon' => $img_icon,
+            'img_avatar' => $img_avatar,
             'description' => $request->input('description'),
             'content' => $request->input('content'),
-            'status'=> $request->status,
-            'order'=>$current
+            'order'=>$order
         ];
+
         $this->promotion->create($data);
         Notification::success('Created');
         return  redirect()->route('admin.promotion.index');
@@ -138,102 +134,114 @@ class PromotionController extends Controller {
      */
     public function update(Request $request,ImageRequest $imgrequest, $id)
     {
-        if($imgrequest->hasFile('img')){
-            $file = $imgrequest->file('img');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
+			if($imgrequest->hasFile('img_avatar')){
+				$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
+				$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
+			}else{
+				$img_avatar =$request->file('img-avatar-bk');
+			}
 
-            // $file->move($destinationPath,$filename);
-            $filename_resize = $destinationPath.'/'.$filename;
-            $size = getimagesize($file);
-            \Image::make($file->getRealPath())->resize(200,200)->save($filename_resize);
+			if($imgrequest->hasFile('img_icon')){
+				$img_icon = $this->common->uploadImage($request, $request->file('img_icon'), $this->upload_folder, false);
+				$img_icon = $this->common->getPath($img_icon, asset('public/upload/'));
+			}else{
+				$img_icon =$request->input('img-icon-bk');
+			}
 
-            // $size = getimagesize($file);
-            // if($size[0] > 620){
-            //     \Image::make($file->getRealPath())->resize(620,null,function($constraint){$constraint->aspectRatio();})->save($destinationPath.'/'.$filename);
-            // }else{
-            //     $file->move($destinationPath,$filename);
-            // }
-
-            $img_url = asset('public/upload').'/'.$this->upload_folder.'/'.$filename;
-        }else{
-            $img_url = $request->input('img-bk');
-        }
-
-        if($imgrequest->hasFile('img-slide')){
-            $file = $imgrequest->file('img-slide');
-            $destinationPath = 'public/upload'.'/'.$this->upload_folder;
-            $name = preg_replace('/\s+/', '', $file->getClientOriginalName());
-            $filename = time().'_'.$name;
-
-            // $file->move($destinationPath,$filename);
-            $filename_resize = $destinationPath.'/'.$filename;
-            $size = getimagesize($file);
-            \Image::make($file->getRealPath())->resize(560,230)->save($filename_resize);
-
-            // $size = getimagesize($file);
-            // if($size[0] > 620){
-            //     \Image::make($file->getRealPath())->resize(620,null,function($constraint){$constraint->aspectRatio();})->save($destinationPath.'/'.$filename);
-            // }else{
-            //     $file->move($destinationPath,$filename);
-            // }
-
-            $img_url2 = asset('public/upload').'/'.$this->upload_folder.'/'.$filename;
-        }else{
-            $img_url2 = $request->input('img-bk-chitiet');
-        }
-
-        $promotion = $this->promotion->find($id);
-        $promotion->name = $request->name;
-        $promotion->slug = \Unicode::make($request->name);
-        $promotion->description = $request->input('description');
-        $promotion->content = $request->input('content');
-        $promotion->img_icon = $img_url;
-        $promotion->img_avatar = $img_url2;
-        $promotion->status = $request->status;
-        $promotion->order = $request->order;
-        $promotion->save();
-
-        Notification::success('Updated');
-        return  redirect()->route('admin.promotion.index');
+			$data = [
+					'name'=>$request->name,
+					'slug' => \Unicode::make($request->name),
+					'img_icon' => $img_icon,
+					'img_avatar' => $img_avatar,
+					'description' => $request->input('description'),
+					'content' => $request->input('content'),
+					'status'=> $request->status,
+					'order'=>$request->order
+			];
+			$this->promotion->update($data, $id);
+      Notification::success('Updated');
+      return  redirect()->route('admin.promotion.index');
     }
 
-    /**
+		/**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id){
-        $this->promotion->destroy($id);
+        $this->promotion->delete($id);
         \Notification::success('Remove Successful');
         return redirect()->route('admin.promotion.index');
     }
 
     public function deleteAll(Request $request){
-        if(!$request->ajax()){
-            return view('404');
+		if(!$request->ajax()){
+			abort(404);
+		}else{
+			 $data = $request->arr;
+			 $response = $this->promotion->deleteAll($data);
+			 return response()->json(['msg' => 'ok']);
+		}
+    }
+
+    public function AjaxRemovePhoto(Request $request){
+		if(!$request->ajax()){
+            abort('404', 'Not Access');
         }else{
-            $data = $request->arr;
-            if($data){
-                $this->promotion->destroy($data);
-                return response()->json(array('msg'=>'ok'));
-            }else{
-                return response()->json(array('msg'=>'error'));
-            }
+            $id = $request->input('id_photo');
+            $this->media->delete($id);
+            return response()->json([
+                'mes' => 'Deleted',
+                'error'=> false,
+            ], 200);
         }
     }
 
-    public function checkRelate(Request $request){
-        $promotion = $this->promotion->find($request->dataid);
-        $count = $promotion->image()->get()->count();
-        if($count > 0){
-            return response()->json(['msg'=>'yes']);
+	public function AjaxUpdatePhoto(Request $request){
+		if(!$request->ajax()){
+            abort('404', 'Not Access');
         }else{
-            $promotion->delete();
-            return response()->json(['msg'=>'done']);
+            $id = $request->input('id_photo');
+            $order = $request->input('value');
+            $photo = $this->media->update(['order'=>$order], $id);
+
+            return response()->json([
+                'mes' => 'Update Order',
+                'error'=> false,
+            ], 200);
         }
     }
-	
+
+	public function postAjaxUpdateOrder(Request $request)
+    {
+        if(!$request->ajax())
+        {
+            abort('404', 'Not Access');
+        }else{
+            $data = $request->input('data');
+            foreach($data as $k => $v){
+                $upt  =  [
+                    'order' => $v,
+                ];
+                $obj = $this->promotion->find($k);
+                $obj->update($upt);
+            }
+            return response()->json(['msg' =>'ok', 'code'=>200], 200);
+        }
+    }
+
+	public function postAjaxUpdateStatus(Request $request)
+    {
+        if(!$request->ajax())
+        {
+            abort('404', 'Not Access');
+        }else{
+            $value = $request->input('value');
+            $id = $request->input('id');
+            $this->promotion->update(['status' => $value], $id);
+            return response()->json(['msg' =>'ok', 'code'=>200], 200);
+        }
+    }
+
 }

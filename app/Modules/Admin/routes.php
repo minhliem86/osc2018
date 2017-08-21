@@ -46,7 +46,10 @@ Route::group(['prefix'=>'admin','namespace'=>'App\Modules\Admin\Controllers'],fu
 
 		Route::group(['middleware'=>'checkAdminRole'], function(){
 			/*PROMOTION*/
-			Route::post('promotion/deleteall',['as'=>'admin.promotion.deleteall','uses'=>'PromotionController@deleteAll']);
+			Route::post('promotion/deleteAll',['as'=>'admin.promotion.deleteAll','uses'=>'PromotionController@deleteAll']);
+			Route::any('promotion/getData',['as'=>'admin.promotion.getData','uses'=>'PromotionController@getData']);
+			Route::post('promotion/postAjaxUpdateOrder',['as'=>'admin.promotion.postAjaxUpdateOrder','uses'=>'PromotionController@postAjaxUpdateOrder']);
+			Route::post('promotion/postAjaxUpdateStatus',['as'=>'admin.promotion.postAjaxUpdateStatus','uses'=>'PromotionController@postAjaxUpdateStatus']);
 			Route::resource('promotion','PromotionController');
 
 			/*COUTRY*/
@@ -62,8 +65,11 @@ Route::group(['prefix'=>'admin','namespace'=>'App\Modules\Admin\Controllers'],fu
 			Route::post('location/deleteall',['as'=>'admin.location.deleteall','uses'=>'LocationController@deleteAll']);
 			Route::resource('location','LocationController');
 
-			/*TESTIMONIAL*/
-			Route::post('testimonial/deleteall',['as'=>'admin.testimonial.deleteall','uses'=>'TestimonialController@deleteAll']);
+			/*PROMOTION*/
+			Route::post('testimonial/deleteAll',['as'=>'admin.testimonial.deleteAll','uses'=>'TestimonialController@deleteAll']);
+			Route::any('testimonial/getData',['as'=>'admin.testimonial.getData','uses'=>'TestimonialController@getData']);
+			Route::post('testimonial/postAjaxUpdateOrder',['as'=>'admin.testimonial.postAjaxUpdateOrder','uses'=>'TestimonialController@postAjaxUpdateOrder']);
+			Route::post('testimonial/postAjaxUpdateStatus',['as'=>'admin.testimonial.postAjaxUpdateStatus','uses'=>'TestimonialController@postAjaxUpdateStatus']);
 			Route::resource('testimonial','TestimonialController');
 
 			/*Image*/

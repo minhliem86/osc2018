@@ -11,46 +11,26 @@
 			{!!Form::open(array('route'=>array('admin.testimonial.store'),'class'=>'formAdmin form-horizontal','files'=>true))!!}
 				<div class="form-group">
 					<label for="">Hình đại diện</label>
-					{!!Form::file('img')!!}
-					@if($errors->first('img'))
-						<p class="error">{!!$errors->first('img')!!}</p>
+					{!!Form::file('img_avatar')!!}
+					@if($errors->first('img_avatar'))
+						<p class="error">{!!$errors->first('img_avatar')!!}</p>
 					@endif
 				</div>
-				<div class="form-group">
-					<label for="">Hình slideshow</label>
-					{!!Form::file('imgslide')!!}
-				</div>
-				<div class="form-group">
-					<label for="">Tên bài viết</label>
-					{!!Form::text('title',old('title'),array('class'=>'form-control'))!!}
-				</div>
-				<div class="form-group">
-					<label for="">Tác giả</label>
+        <div class="form-group">
+					<label for="">Author</label>
 					{!!Form::text('author',old('author'),array('class'=>'form-control'))!!}
 				</div>
 				<div class="form-group">
-					<label for="">Mô tả</label>
-					{!!Form::textarea('description',old('description'),array('class'=>'form-control','rows'=>3))!!}
+					<label for="">Title</label>
+					{!!Form::text('title',old('title'),array('class'=>'form-control'))!!}
 				</div>
 				<div class="form-group">
-					<label for="">Nội dung</label>
-					{!!Form::textarea('content',old('content'),array('class'=>'form-control ckeditor'))!!}
+					<label for="">Description</label>
+					{!!Form::textarea('description',old('description'),array('class'=>'form-control'))!!}
 				</div>
-
-				<div class="form-margin">
-					<label for="">Trạng thái</label>
-					<div>
-						<span class="inline-radio"><input type="radio" name="status" value="1" checked=""> <b>Active</b> </span>
-						<span class="inline-radio"><input type="radio" name="status" value="0" > <b>Deactive</b> </span>
-					</div>
-				</div>
-
-				<div class="form-margin">
-					<label for="">Nổi bật</label>
-					<div>
-						<span class="inline-radio"><input type="radio" name="focus" value="1" checked=""> <b>Có</b> </span>
-						<span class="inline-radio"><input type="radio" name="focus" value="0" > <b>Không</b> </span>
-					</div>
+        <div class="form-group">
+					<label for="">Content</label>
+					{!!Form::textarea('content',old('content'),array('class'=>'form-control'))!!}
 				</div>
 
 				<div class="form-group">
@@ -64,7 +44,8 @@
 @stop
 
 @section('script')
-<script>
+    <link rel="stylesheet" href="{!!asset('public/assets/backend/js/bootstrap-upload/css/fileinput.min.css')!!}" />
+    <script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/plugins/sortable.min.js')!!}"></script>
+    <script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/fileinput.min.js')!!}"></script>
 
-</script>
 @stop

@@ -10,45 +10,45 @@
 		<div class="container-fluid">
 			{!!Form::model($country,array('route'=>array('admin.country.update',$country->id),'method'=>'PUT' ,'class'=>'formAdmin form-horizontal','files'=>true))!!}
                 <div class="form-group">
-                    <label for="">Hình đại diện</label>
+                    <label for="">Avatar Photo</label>
                     <p>
-						<img src="{!!asset('public/upload')!!}/{!!$country->img_avatar!!}" width="150" alt="">
-						{!!Form::hidden('img-bk',$country->img_avatar)!!}
-					</p>
+          						<img src="{!!asset('public/upload')!!}/{!!$country->img_avatar!!}" width="150" alt="">
+          						{!!Form::hidden('img-bk',$country->img_avatar)!!}
+          					</p>
                     {!!Form::file('img')!!}
                     @if($errors->first('img'))
                         <p class="error">{!!$errors->first('img')!!}</p>
                     @endif
                 </div>
                 <div class="form-group">
-                    <label for="">Quốc gia</label>
+                    <label for="">Country</label>
                     {!!Form::text('name',old('name'),array('class'=>'form-control'))!!}
                 </div>
                 <div class="form-group">
-                    <label for="">Mô tả</label>
+                    <label for="">Description</label>
                     {!!Form::textarea('description',old('description'),array('class'=>'form-control'))!!}
                 </div>
                 <div class="form-group">
-                    <label for="">Sắp xếp</label>
+                    <label for="">Order</label>
                     {!!Form::text('order',old('order'),array('class'=>'form-control'))!!}
                 </div>
                 <div class="form-group">
-                    <label for="">Kết hợp nhiều quốc gia</label>
+                    <label for="">Multi Country</label>
                     <div>
-                        <span class="inline-radio"><input type="radio" name="multi_countries" value="1" {!!$country->multi_countries == 1 ? 'checked' : ''!!}> <b>Có</b> </span>
-                        <span class="inline-radio"><input type="radio" name="multi_countries" value="0" {!!$country->multi_countries == 0 ? 'checked' : ''!!}> <b>Không</b> </span>
+                        <span class="inline-radio"><input type="radio" name="multi_countries" value="1" {!!$country->multi_countries == 1 ? 'checked' : ''!!}> <b>Yes</b> </span>
+                        <span class="inline-radio"><input type="radio" name="multi_countries" value="0" {!!$country->multi_countries == 0 ? 'checked' : ''!!}> <b>No</b> </span>
                     </div>
 
                 </div>
                 <div class="form-group">
-                    <label for="">Hiển thị theo lựa chọn</label>
+                    <label for="">Show Follow</label>
                     <div>
-                        <span class="inline-radio"><input type="radio" name="home_show" value="1" {!!$country->home_show == 1 ? 'checked' : ''!!}> <b>Có</b> </span>
-                        <span class="inline-radio"><input type="radio" name="home_show" value="0" {!!$country->home_show == 0 ? 'checked' : ''!!}> <b>Không</b> </span>
+                        <span class="inline-radio"><input type="radio" name="home_show" value="1" {!!$country->home_show == 1 ? 'checked' : ''!!}> <b>Yes</b> </span>
+                        <span class="inline-radio"><input type="radio" name="home_show" value="0" {!!$country->home_show == 0 ? 'checked' : ''!!}> <b>No</b> </span>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="">Trạng thái</label>
+                    <label for="">Status</label>
                     <div>
                         <span class="inline-radio"><input type="radio" name="status" value="1" {!!$country->status == 1 ? 'checked' : ''!!}> <b>Active</b> </span>
                         <span class="inline-radio"><input type="radio" name="status" value="0" {!!$country->status == 0 ? 'checked' : ''!!}> <b>Deactive</b> </span>
