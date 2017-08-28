@@ -7,7 +7,7 @@ use Notification;
 use App\Http\Requests\ImageRequest;
 use App\Repositories\PromotionRepository;
 use App\Repositories\Eloquent\CommonRepository;
-use Databases;
+use Datatables;
 
 
 class PromotionController extends Controller {
@@ -69,20 +69,20 @@ class PromotionController extends Controller {
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request,ImageRequest $imgrequest, Promotion $promotion)
+    public function store(Request $request,ImageRequest $imgrequest)
     {
 				$order = $this->promotion->getOrder();
 
 				if($imgrequest->hasFile('img_avatar')){
 					$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
-					$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
+					$img_avatar = $this->common->getPath($img_avatar, asset('public/upload'));
 				}else{
 					$img_avatar ="";
 				}
 
 				if($imgrequest->hasFile('img_icon')){
 					$img_icon = $this->common->uploadImage($request, $request->file('img_icon'), $this->upload_folder, false);
-					$img_icon = $this->common->getPath($img_icon, asset('public/upload/'));
+					$img_icon = $this->common->getPath($img_icon, asset('public/upload'));
 				}else{
 					$img_icon ="";
 				}
@@ -136,14 +136,14 @@ class PromotionController extends Controller {
     {
 			if($imgrequest->hasFile('img_avatar')){
 				$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
-				$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
+				$img_avatar = $this->common->getPath($img_avatar, asset('public/upload'));
 			}else{
-				$img_avatar =$request->file('img-avatar-bk');
+				$img_avatar =$request->input('img-avatar-bk');
 			}
 
 			if($imgrequest->hasFile('img_icon')){
 				$img_icon = $this->common->uploadImage($request, $request->file('img_icon'), $this->upload_folder, false);
-				$img_icon = $this->common->getPath($img_icon, asset('public/upload/'));
+				$img_icon = $this->common->getPath($img_icon, asset('public/upload'));
 			}else{
 				$img_icon =$request->input('img-icon-bk');
 			}

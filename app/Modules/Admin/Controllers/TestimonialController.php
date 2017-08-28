@@ -7,18 +7,22 @@ use Notification;
 use App\Http\Requests\ImageRequest;
 use App\Repositories\TestimonialRepository;
 use App\Repositories\Eloquent\CommonRepository;
-use Databases;
+use App\Repositories\MediaRepository;
+use Datatables;
 
 class TestimonialController extends Controller {
 
 	protected $testimonial;
 	protected $common;
+	protected $media;
 
     protected $upload_folder = 'public/upload/testimonial';
     protected $upload_sub_folder = 'public/upload/testimonial/slide';
 
-    public function __construct(Testimonial $testimonial){
+    public function __construct(TestimonialRepository $testimonial, CommonRepository $common, MediaRepository $media){
         $this->testimonial = $testimonial;
+        $this->common = $common;
+        $this->media = $media;
     }
 
     public function index()
@@ -26,31 +30,31 @@ class TestimonialController extends Controller {
         return view('Admin::pages.testimonial.index');
     }
 
-		public function getData(Request $request)
-		{
-			$testimonial = $this->testimonial->select(['id', 'title','order', 'status','author']);
-			return Datatables::of($testimonial)
-			->addColumn('action', function($testimonial){
-					return '<a href="'.route('admin.testimonial.edit', $testimonial->id).'" class="btn btn-info btn-xs inline-block-span"> Edit </a>
-					<form method="POST" action=" '.route('admin.testimonial.destroy', $testimonial->id).' " accept-charset="UTF-8" class="inline-block-span" style="display:inline-block">
-							<input name="_method" type="hidden" value="DELETE">
-							<input name="_token" type="hidden" value="'.csrf_token().'">
-												 <button class="btn  btn-danger btn-xs remove-btn" type="button" attrid=" '.route('admin.testimonial.destroy', $testimonial->id).' " onclick="confirm_remove(this);" > Remove </button>
-				 </form>' ;
-		 })->editColumn('order', function($testimonial){
-				 return "<input type='text' name='order' class='form-control' data-id= '".$testimonial->id."' value= '".$testimonial->order."' />";
-		 })->editColumn('status', function($testimonial){
-				 $status = $testimonial->status ? 'checked' : '';
-				 $testimonial_id =$testimonial->id;
-				 return '
-							<input type="checkbox"   name="status" value="1" '.$status.'   data-id ="'.$testimonial_id.'">
-				';
-		 })->filter(function($query) use ($request){
-				if ($request->has('name')) {
-						$query->where('title', 'like', "%{$request->input('name')}%");
-				}
-			})->setRowId('id')->make(true);
-		}
+	public function getData(Request $request)
+	{
+		$testimonial = $this->testimonial->select(['id', 'title','order', 'status','author']);
+		return Datatables::of($testimonial)
+		->addColumn('action', function($testimonial){
+				return '<a href="'.route('admin.testimonial.edit', $testimonial->id).'" class="btn btn-info btn-xs inline-block-span"> Edit </a>
+				<form method="POST" action=" '.route('admin.testimonial.destroy', $testimonial->id).' " accept-charset="UTF-8" class="inline-block-span" style="display:inline-block">
+						<input name="_method" type="hidden" value="DELETE">
+						<input name="_token" type="hidden" value="'.csrf_token().'">
+											 <button class="btn  btn-danger btn-xs remove-btn" type="button" attrid=" '.route('admin.testimonial.destroy', $testimonial->id).' " onclick="confirm_remove(this);" > Remove </button>
+			 </form>' ;
+	 })->editColumn('order', function($testimonial){
+			 return "<input type='text' name='order' class='form-control' data-id= '".$testimonial->id."' value= '".$testimonial->order."' />";
+	 })->editColumn('status', function($testimonial){
+			 $status = $testimonial->status ? 'checked' : '';
+			 $testimonial_id =$testimonial->id;
+			 return '
+						<input type="checkbox"   name="status" value="1" '.$status.'   data-id ="'.$testimonial_id.'">
+			';
+	 })->filter(function($query) use ($request){
+			if ($request->has('name')) {
+					$query->where('title', 'author', "%{$request->input('name')}%");
+			}
+		})->setRowId('id')->make(true);
+	}
 
     /**
      * Show the form for creating a new resource.
@@ -68,16 +72,16 @@ class TestimonialController extends Controller {
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request,ImageRequest $imgrequest, Testimonial $testimonial)
+    public function store(Request $request, ImageRequest $imgrequest)
     {
-				$order = $this->testimonial->getOrder();
+		$order = $this->testimonial->getOrder();
 
-				if($imgrequest->hasFile('img_avatar')){
-					$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
-					$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
-				}else{
-					$img_avatar ="";
-				}
+		if($imgrequest->hasFile('img_avatar')){
+			$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
+			$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
+		}else{
+			$img_avatar ="";
+		}
 
         $data = [
             'title'=>$request->title,
@@ -88,7 +92,22 @@ class TestimonialController extends Controller {
             'img_avatar' => $img_avatar,
             'order'=>$order
         ];
-        $this->testimonial->create($data);
+        $testimonial = $this->testimonial->create($data);
+
+		if($imgrequest->hasFile('web')){
+			foreach($request->file('web') as $k=>$thumb){
+			  $img_web = $this->common->uploadImage($request, $thumb, $this->upload_folder,$resize = false);
+			  $img_web = $this->common->getPath($img_web, asset('public/upload/'));
+
+			  $order = $this->media->getOrder();
+			  $testimonial->medias()->save(new \App\Models\Media([
+				'img_url' => $img_web,
+				'order'=>$order,
+				'type' => 1
+			  ]));
+			}
+		}
+
         Notification::success('Created');
         return  redirect()->route('admin.testimonial.index');
     }
@@ -125,24 +144,38 @@ class TestimonialController extends Controller {
      */
     public function update(Request $request,ImageRequest $imgrequest, $id)
     {
-				if($imgrequest->hasFile('img_avatar')){
-					$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
-					$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
-				}else{
-					$img_avatar =$request->input('img-avatar-bk');
-				}
+		if($imgrequest->hasFile('img_avatar')){
+			$img_avatar = $this->common->uploadImage($request, $request->file('img_avatar'), $this->upload_folder, false);
+			$img_avatar = $this->common->getPath($img_avatar, asset('public/upload/'));
+		}else{
+			$img_avatar =$request->input('img-avatar-bk');
+		}
 
-				$data = [
-						'title'=>$request->title,
-						'slug' => \Unicode::make($request->title),
-						'author' => $request->author,
-						'description' => $request->description,
-						'content' => $request->content,
-						'img_avatar' => $img_avatar,
-						'status'=> $request->status,
-						'order'=>$request->order,
-				];
-				$this->testimonial->update($data, $id);
+		$data = [
+				'title'=>$request->title,
+				'slug' => \Unicode::make($request->title),
+				'author' => $request->author,
+				'description' => $request->description,
+				'content' => $request->content,
+				'img_avatar' => $img_avatar,
+				'status'=> $request->status,
+				'order'=>$request->order,
+		];
+		$this->testimonial->update($data, $id);
+
+		if($imgrequest->hasFile('web')){
+			foreach($request->file('web') as $k=>$thumb){
+			  $img_web = $this->common->uploadImage($request, $thumb, $this->upload_web_banner,$resize = false);
+			  $img_web = $this->common->getPath($img_web, asset('public/upload/'));
+
+			  $order = $this->media->getOrder();
+			  $country->medias()->save(new \App\Models\Media([
+				'img_url' => $img_web,
+				'order'=>$order,
+				'type' => 1
+			  ]));
+			}
+		}
         Notification::success('Updated');
         return  redirect()->route('admin.testimonial.index');
     }

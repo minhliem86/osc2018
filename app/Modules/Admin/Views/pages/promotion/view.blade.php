@@ -12,8 +12,8 @@
           <div class="form-group">
               <label for="">Avatar Photo</label>
               <p>
-    						<img src="{!!asset('public/upload')!!}/{!!$promotion->img_avatar!!}" width="150" alt="">
-    						{!!Form::hidden('img-bk',$promotion->img_avatar)!!}
+    						<img src="{!!asset('public/upload')!!}{!!$promotion->img_avatar!!}" width="150" alt="">
+    						{!!Form::hidden('img-avatar-bk',$promotion->img_avatar)!!}
     					</p>
               {!!Form::file('img_avatar')!!}
               @if($errors->first('img_avatar'))
@@ -23,9 +23,9 @@
           <div class="form-group">
               <label for="">Icon Photo</label>
               <p>
-    						<img src="{!!asset('public/upload')!!}/{!!$promotion->img_icon!!}" width="150" alt="">
-    						{!!Form::hidden('img-bk',$promotion->img_icon)!!}
-    					</p>
+					<img src="{!!asset('public/upload')!!}{!!$promotion->img_icon!!}" width="150" alt="">
+					{!!Form::hidden('img-icon-bk',$promotion->img_icon)!!}
+				</p>
               {!!Form::file('img_icon')!!}
               @if($errors->first('img_icon'))
                   <p class="error">{!!$errors->first('img_icon')!!}</p>
@@ -37,11 +37,11 @@
           </div>
           <div class="form-group">
               <label for="">Description</label>
-              {!!Form::textarea('description',old('description'),array('class'=>'form-control'))!!}
+              {!!Form::textarea('description',old('description'),array('class'=>'form-control ckeditor'))!!}
           </div>
           <div class="form-group">
               <label for="">Order</label>
-              {!!Form::text('order',old('order'),array('class'=>'form-control'))!!}
+              {!!Form::text('order',old('order'),array('class'=>'form-control ckeditor'))!!}
           </div>
           <div class="form-group">
               <label for="">Status</label>

@@ -16,7 +16,7 @@
 						<p class="error">{!!$errors->first('img_avatar')!!}</p>
 					@endif
 				</div>
-        <div class="form-group">
+                <div class="form-group">
 					<label for="">Author</label>
 					{!!Form::text('author',old('author'),array('class'=>'form-control'))!!}
 				</div>
@@ -26,12 +26,16 @@
 				</div>
 				<div class="form-group">
 					<label for="">Description</label>
-					{!!Form::textarea('description',old('description'),array('class'=>'form-control'))!!}
+					{!!Form::textarea('description',old('description'),array('class'=>'form-control ckeditor'))!!}
 				</div>
-        <div class="form-group">
+                <div class="form-group">
 					<label for="">Content</label>
-					{!!Form::textarea('content',old('content'),array('class'=>'form-control'))!!}
+					{!!Form::textarea('content',old('content'),array('class'=>'form-control ckeditor'))!!}
 				</div>
+                <div class="form-group">
+                    <label for="banner">Web Banner</label>
+                    <input type="file" name="web[]"  class="web_banner" multiple>
+                </div>
 
 				<div class="form-group">
 					{!!Form::submit('Save',array('class'=>'btn btn-primary'))!!}
@@ -47,5 +51,21 @@
     <link rel="stylesheet" href="{!!asset('public/assets/backend/js/bootstrap-upload/css/fileinput.min.css')!!}" />
     <script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/plugins/sortable.min.js')!!}"></script>
     <script src="{!!asset('public/assets/backend/js/bootstrap-upload/js/fileinput.min.js')!!}"></script>
+
+    <script>
+        $(document).ready(function(){
+            $('.web_banner').fileinput({
+                uploadUrl: '{!!route('admin.testimonial.create')!!}',
+                uploadAsync: false,
+                dropZoneEnabled:false,
+                showCaption: false,
+                showUpload: false,
+                fileActionSettings:{
+                    showDrag: true,
+                    showUpload: false,
+                }
+            })
+        })
+    </script>
 
 @stop

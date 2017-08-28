@@ -22,7 +22,7 @@
 				</div>
 				<div class="form-group">
 					<label for="">Description</label>
-					{!!Form::textarea('description',old('description'),array('class'=>'form-control'))!!}
+					{!!Form::textarea('description',old('description'),array('class'=>'form-control ckeditor'))!!}
 				</div>
 				<div class="form-group">
 					<label for="">Multi Country</label>

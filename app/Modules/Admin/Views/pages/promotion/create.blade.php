@@ -29,11 +29,11 @@
 				</div>
 				<div class="form-group">
 					<label for="">Description</label>
-					{!!Form::textarea('description',old('description'),array('class'=>'form-control'))!!}
+					{!!Form::textarea('description',old('description'),array('class'=>'form-control ckeditor'))!!}
 				</div>
         <div class="form-group">
 					<label for="">Content</label>
-					{!!Form::textarea('content',old('content'),array('class'=>'form-control'))!!}
+					{!!Form::textarea('content',old('content'),array('class'=>'form-control ckeditor'))!!}
 				</div>
 
 				<div class="form-group">

@@ -60,7 +60,7 @@
             },
             columns: [
                {data: 'id', name: 'id', 'orderable': false},
-               {data: 'name', name: 'name'},
+               {data: 'title', name: 'title', 'orderable': false},
                {data: 'author', name: 'author'},
                {data: 'order', name: 'order' , 'orderable': false},
                {data: 'status', name: 'status', 'orderable': false},
